@@ -1,5 +1,6 @@
 from koma import Koma
 
+
 class Field:
     def __init__(self):
         self.board = [[None for _ in range(8)] for _ in range(8)]
@@ -9,8 +10,48 @@ class Field:
         self.board[4][3] = Koma(3, 4, "B")
         self.board[4][4] = Koma(4, 4, "W")
 
+    def can_put_koma(self, x, y, state):
+        if x < 0 or x >= 8 or y < 0 or y >= 8:
+            return False
+
+        if self.board[y][x] is not None:
+            return False
+
+        directions = [
+            (1, 0), (-1, 0),
+            (0, -1), (0, 1),
+            (1, -1), (-1, -1),
+            (1, 1), (-1, 1)
+        ]
+
+        for dx, dy in directions:
+            nx = x + dx
+            ny = y + dy
+
+            if (0 <= nx < 8 and 0 <= ny < 8
+                    and self.board[ny][nx] is not None
+                    and self.board[ny][nx].state != state):
+
+                while (0 <= nx < 8 and 0 <= ny < 8
+                       and self.board[ny][nx] is not None
+                       and self.board[ny][nx].state != state):
+                    nx += dx
+                    ny += dy
+
+                if (0 <= nx < 8 and 0 <= ny < 8
+                        and self.board[ny][nx] is not None
+                        and self.board[ny][nx].state == state):
+                    return True
+
+        return False
+
     def put_koma(self, x, y, state):
-        self.board[y][x] = Koma(x, y, state)
+        if self.can_put_koma(x, y, state):
+            self.board[y][x] = Koma(x, y, state)
+            self.reverse_all(x, y, state)
+            return True
+
+        return False
 
     def reverse_koma(self, x, y):
         koma = self.board[y][x]
@@ -161,6 +202,7 @@ class Field:
 
             i -= 1
             j += 1
+
     def reverse_all(self, x, y, state):
         self.reverse_right(x, y, state)
         self.reverse_left(x, y, state)
@@ -175,7 +217,6 @@ class Field:
 field = Field()
 
 field.put_koma(4, 5, "B")
-field.reverse_all(4, 5, "B")
 
 for row in field.board:
     for koma in row:
